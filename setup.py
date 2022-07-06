@@ -144,6 +144,27 @@ if sys.platform.startswith('win'):
     extra_compile_args += [r'/FIPython.h']
     libraries += ['Advapi32']
 
+# if os.getenv('PRIVATEER_ROOT') is not None:
+#    privateer_lib = os.getenv('PRIVATEER_ROOT') + '/lib'
+#    privateer_include = os.getenv('PRIVATEER_ROOT') + '/include'
+#    extra_include_dirs += [privateer_include]
+#    extra_library_dirs += [privateer_lib]
+#    extra_compile_args += ['-L']
+#    extra_compile_args += [privateer_lib]
+#    extra_compile_args += ['-lprivateer']
+#    extra_compile_args += ['-fopenmp']
+#    extra_compile_args += ['-lstdc++']
+#    extra_compile_args += ['-lstdc++fs']
+#    extra_compile_args += ['-lcrypto']
+#    extra_compile_args += ['-lrt']
+#    if os.getenv('ZSTD_ROOT') is not None:
+#        zstd_include_and_lib = os.getenv('ZSTD_ROOT') + '/lib'
+#        extra_compile_args += ['-DUSE_COMPRESSION']
+#        extra_compile_args += ['-L']
+#        extra_compile_args += [zstd_include_and_lib]
+#        extra_compile_args += ['-lzstd']
+#        extra_include_dirs += [zstd_include_and_lib]
+#        extra_library_dirs += [zstd_include_and_lib]  
 
 # Capture setup.py configuration for later use by cffi, otherwise the
 # configuration may differ, forcing a recompile (and therefore likely compile

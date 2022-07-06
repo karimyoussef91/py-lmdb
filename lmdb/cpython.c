@@ -884,7 +884,6 @@ make_trans(EnvObject *env, DbObject *db, TransObject *parent, int write,
     }
     self->txn = txn;
 
-
     OBJECT_INIT(self)
     LINK_CHILD(env, self)
     self->weaklist = NULL;
@@ -1176,7 +1175,8 @@ static PyObject *
 env_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     struct env_new {
-        PyObject *path;
+        PyObject *privateer_base_path;
+        PyObject *db_name;
         size_t map_size;
         int subdir;
         int readonly;
@@ -1192,10 +1192,11 @@ env_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         int max_dbs;
         int max_spare_txns;
         int lock;
-    } arg = {NULL, 10485760, 1, 0, 1, 1, 0, 0755, 1, 1, 0, 1, 126, 0, 1, 1};
+    } arg = {NULL, NULL, 10485760, 1, 0, 1, 1, 0, 0755, 1, 1, 0, 1, 126, 0, 1, 1};
 
     static const struct argspec argspec[] = {
-        {"path", ARG_OBJ, OFFSET(env_new, path)},
+        {"privateer_base_path", ARG_OBJ, OFFSET(env_new, privateer_base_path)},
+        {"db_name", ARG_OBJ, OFFSET(env_new, db_name)},
         {"map_size", ARG_SIZE, OFFSET(env_new, map_size)},
         {"subdir", ARG_BOOL, OFFSET(env_new, subdir)},
         {"readonly", ARG_BOOL, OFFSET(env_new, readonly)},
@@ -1225,7 +1226,7 @@ env_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    if(! arg.path) {
+    if(! arg.privateer_base_path) {
         return type_error("'path' argument required");
     }
 
@@ -1259,7 +1260,7 @@ env_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         goto fail;
     }
 
-    if(! ((fspath_obj = get_fspath(arg.path)))) {
+    if(! ((fspath_obj = get_fspath(arg.privateer_base_path)))) {
         goto fail;
     }
     fspath = PyBytes_AS_STRING(fspath_obj);
@@ -1303,9 +1304,11 @@ env_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* Strip +x. */
     mode = arg.mode & ~0111;
-
-    DEBUG("mdb_env_open(%p, '%s', %d, %o);", self->env, fspath, flags, mode)
-    UNLOCKED(rc, mdb_env_open(self->env, fspath, flags, mode));
+    DEBUG("mdb_env_set_privateer_info(%p, '%s');", self->env, fspath)
+    UNLOCKED(rc, mdb_env_set_privateer_info(self->env, fspath));
+    const char* db_name = PyBytes_AS_STRING(get_fspath(arg.db_name));
+    DEBUG("mdb_env_open(%p, '%s', %d, %o);", self->env, db_name, flags, mode)
+    UNLOCKED(rc, mdb_env_open(self->env, db_name, flags, mode));
     if(rc) {
         err_set(fspath, rc);
         goto fail;
@@ -1407,7 +1410,7 @@ env_copy(EnvObject *self, PyObject *args, PyObject *kwds)
 
     fspath_s = PyBytes_AS_STRING(fspath_obj);
     flags = arg.compact ? MDB_CP_COMPACT : 0;
-#ifdef HAVE_PATCHED_LMDB
+/* #ifdef HAVE_PATCHED_LMDB
     UNLOCKED(rc, mdb_env_copy3(self->env, fspath_s, flags, txn));
 #else
     UNLOCKED(rc, mdb_env_copy2(self->env, fspath_s, flags));
@@ -1419,6 +1422,10 @@ env_copy(EnvObject *self, PyObject *args, PyObject *kwds)
 #else
         return err_set("mdb_env_copy2", rc);
 #endif
+    } */
+    UNLOCKED(rc, mdb_env_copy(self->env, fspath_s));
+    if(rc) {
+        return err_set("mdb_env_copy", rc);
     }
     Py_RETURN_NONE;
 }

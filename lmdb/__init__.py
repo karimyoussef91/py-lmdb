@@ -39,15 +39,19 @@ def _reading_docs():
 try:
     if _reading_docs() or os.getenv('LMDB_FORCE_CFFI') is not None:
         raise ImportError
+    print("Not raising import error")
     from lmdb.cpython import *
     from lmdb.cpython import open
     from lmdb.cpython import __all__
 except ImportError:
+    print("Import error caught")
     if (not _reading_docs()) and os.getenv('LMDB_FORCE_CPYTHON') is not None:
         raise
+    print("Before cffi imports")
     from lmdb.cffi import *
     from lmdb.cffi import open
     from lmdb.cffi import __all__
     from lmdb.cffi import __doc__
 
 __version__ = '1.2.1'
+print("__init__() All Done!")

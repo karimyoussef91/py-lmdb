@@ -168,6 +168,7 @@ _CFFI_CDEF = '''
     int mdb_env_create(MDB_env **env);
     int mdb_env_open(MDB_env *env, const char *path, unsigned int flags,
                      mode_t mode);
+    int mdb_env_copy(MDB_env *env, const char *path);
     int mdb_env_copy2(MDB_env *env, const char *path, int flags);
     int mdb_env_copyfd2(MDB_env *env, int fd, int flags);
     int mdb_env_stat(MDB_env *env, MDB_stat *stat);
@@ -718,6 +719,7 @@ class Environment(object):
                  mode=O_0755, create=True, readahead=True, writemap=False,
                  meminit=True, max_readers=126, max_dbs=0, max_spare_txns=1,
                  lock=True):
+        print("in Env __init__ :)")
         self._max_spare_txns = max_spare_txns
         self._spare_txns = []
 
@@ -869,6 +871,7 @@ class Environment(object):
         return _ffi.string(path[0]).decode(sys.getfilesystemencoding())
 
     def copy(self, path, compact=False, txn=None):
+        print("COPYINH")
         """Make a consistent copy of the environment in the given destination
         directory.
 
@@ -888,22 +891,11 @@ class Environment(object):
         Equivalent to `mdb_env_copy2() or mdb_env_copy3()
         <http://lmdb.tech/doc/group__mdb.html#ga5d51d6130325f7353db0955dbedbc378>`_
         """
-        flags = _lib.MDB_CP_COMPACT if compact else 0
-        if txn and not _have_patched_lmdb:
-            raise TypeError("Non-patched LMDB doesn't support transaction with env.copy")
-
-        if txn and not flags:
-            raise TypeError("txn argument only compatible with compact=True")
-
         encoded = path.encode(sys.getfilesystemencoding())
-        if _have_patched_lmdb:
-            rc = _lib.mdb_env_copy3(self._env, encoded, flags, txn._txn if txn else _ffi.NULL)
-            if rc:
-                raise _error("mdb_env_copy3", rc)
-        else:
-            rc = _lib.mdb_env_copy2(self._env, encoded, flags)
-            if rc:
-                raise _error("mdb_env_copy2", rc)
+        rc = _lib.mdb_env_copy(self._env, encoded)
+        if rc:
+            raise _error("mdb_env_copy", rc)
+
 
     def copyfd(self, fd, compact=False, txn=None):
         """Copy a consistent version of the environment to file descriptor

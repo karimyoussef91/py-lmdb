@@ -600,6 +600,7 @@ def _on_sigwinch(*args):
 
 
 def main(argv=None):
+    print("TOOL MAIN")
     parser = make_parser()
     opts, args = parser.parse_args(argv)
 

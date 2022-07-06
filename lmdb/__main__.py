@@ -19,6 +19,7 @@
 # <http://www.openldap.org/>.
 
 # Hack to support Python >=v2.6 'pythom -mlmdb'
+print("FROM MAIN");
 from __future__ import absolute_import
 import lmdb.tool
 lmdb.tool.main()
