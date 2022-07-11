@@ -2,6 +2,8 @@
 
 #SBATCH --exclusive
 #SBATCH --time=24:00:00
+#SBATCH --output=py-lmdb_incremental-%x.%j.out
+#SBATCH --error=py-lmdb_incremental-%x.%j.out
 
 module load gcc/10.2.1
 
